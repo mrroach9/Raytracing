@@ -46,3 +46,4 @@ Release
 *.sdf
 raytracing/Debug
 raytracing/Release
+*.opensdf
