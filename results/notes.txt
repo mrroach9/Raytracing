@@ -1,0 +1,6 @@
+0 - The previous version rendering result last year, with several bugs, no walls, no transparency, with hard shadows,
+    with kd-tree, super-sampling, phong shading + phong lighting, reflection.
+1 - Solid rendering with bugs fixed, with walls.
+2 - With transparency but solid shadows
+3 - With transparency and shallow shadows, adjusted material and light.
+4 - Same with 3, no supersampling-based anti-aliasing.
