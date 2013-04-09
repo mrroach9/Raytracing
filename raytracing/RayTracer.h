@@ -9,12 +9,15 @@
 #include "LightShadeModel.h"
 #include "KdTree.h"
 #include "CImg.h"
+#include <omp.h>
 
-#define DEFAULT_RESOLUTION_H	180
-#define DEFAULT_RESOLUTION_W	320
-#define DEFAULT_SUPER_SAMPLE	2
+#define DEFAULT_RESOLUTION_H	360
+#define DEFAULT_RESOLUTION_W	640
+#define DEFAULT_SUPER_SAMPLE	1
 #define	DEFAULT_MAX_RECURSSION	4
 #define DEFAULT_THRESHOLD		0.001
+#define DEFAULT_OUTPUT			"render.bmp"
+#define DEFAULT_OMP_THREAD		8
 
 using namespace cimg_library;
 
@@ -44,7 +47,7 @@ private:
 				  int depth);
 	bool findClosestFace(Vector3D ori, Vector3D dir, 
 						 UINT &model_id, UINT &face_id,
-						 double &t);
+						 double &t, Color3 &opaque);
 };
 
 #endif //_RAY_TRACER_H_

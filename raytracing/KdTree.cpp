@@ -80,7 +80,7 @@ void KdTree::constructFromMesh(){
 		if (d > radius) radius = d;
 	}
 
-	radius *= 1.2;
+	radius *= 1.4;
 	face_count = new unsigned char[mesh->m_nFace];
 	memset(face_count, 0, sizeof(unsigned char)*mesh->m_nFace);
 

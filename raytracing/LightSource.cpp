@@ -2,17 +2,17 @@
 
 LightSource::LightSource(){
 	pos = Vector3D(0,0,0);
-	material = Material();
+	color = Color3(0, 0, 0);
 }
 
-LightSource::LightSource(Vector3D pos, Material mat){
+LightSource::LightSource(Vector3D pos, Color3 color){
 	this->pos = pos;
-	this->material = mat;
+	this->color = color;
 }
 
 LightSource::LightSource(const LightSource &ls){
 	this->pos = ls.pos;
-	this->material = ls.material;
+	this->color = ls.color;
 }
 
 double LightSource::attenuate(double dist){

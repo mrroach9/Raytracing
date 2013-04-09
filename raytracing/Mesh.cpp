@@ -3,9 +3,6 @@
 #define ITERATE_TIMES 1
 #define	ALPHA_STRETCH 1.0
 
-//////////////////////////////////////////////////////
-//						CVertex						//
-//////////////////////////////////////////////////////
 CVertex::~CVertex()
 {
 	if(m_piEdge!=NULL)
@@ -15,9 +12,9 @@ CVertex::~CVertex()
 
 CVertex& CVertex::operator = (CVertex& v)
 {
-	m_vPosition = v.m_vPosition;		//点的坐标
-	m_nValence = v.m_nValence;			//点的度数
-	m_piEdge = new UINT[m_nValence];	//从该点发出的halfedge,要根据点的度数动态创建
+	m_vPosition = v.m_vPosition;
+	m_nValence = v.m_nValence;	
+	m_piEdge = new UINT[m_nValence];
 	for(short i=0;i<m_nValence;i++)
 		m_piEdge[i] = v.m_piEdge[i];
 	
@@ -28,28 +25,21 @@ CVertex& CVertex::operator = (CVertex& v)
 }
 
 
-//////////////////////////////////////////////////////
-//						CEdge						//
-//////////////////////////////////////////////////////
-
 CEdge::~CEdge()
 {
 }
 
 CEdge& CEdge::operator = (const CEdge& e)
 {
-	m_iVertex[0] = e.m_iVertex[0];	//边的两端点，Vertex0－>Vertex1
+	m_iVertex[0] = e.m_iVertex[0];
 	m_iVertex[1] = e.m_iVertex[1];
-	m_iTwinEdge = e.m_iTwinEdge;	//与该边方向相反的另一条边，如果为-1则该边为边界
-	m_iNextEdge = e.m_iNextEdge;	//沿逆时针方向的下一条边
-	m_iFace = e.m_iFace;			//该边所属的面，应该在它的左边
+	m_iTwinEdge = e.m_iTwinEdge;
+	m_iNextEdge = e.m_iNextEdge;
+	m_iFace = e.m_iFace;
 
 	return *this;
 }
 
-//////////////////////////////////////////////////////
-//						CFace						//
-//////////////////////////////////////////////////////
 CFace::CFace(short s)
 {
 	m_nType=s;
@@ -94,9 +84,7 @@ CFace& CFace::operator =(const CFace& f)
 	return (*this);
 }
 
-//////////////////////////////////////////////////////
-//						CMesh						//
-//////////////////////////////////////////////////////
+
 void CMesh::clear()
 {
 	if(m_pVertex!=NULL)	{delete[] m_pVertex;m_pVertex=NULL;}
@@ -109,18 +97,18 @@ void CMesh::clear()
 
 CMesh::CMesh(CMesh* pMesh)
 {
-	m_nVertex = pMesh->m_nVertex;				//点数
-	m_pVertex = new CVertex[m_nVertex];			//点表
+	m_nVertex = pMesh->m_nVertex;	
+	m_pVertex = new CVertex[m_nVertex];
 	UINT i;
 	for(i=0;i<m_nVertex;i++)
 		m_pVertex[i] = pMesh->m_pVertex[i];
 
-	m_nEdge = pMesh->m_nEdge;					//边数
-	m_pEdge = new CEdge[m_nEdge]; 				//边表
+	m_nEdge = pMesh->m_nEdge;		
+	m_pEdge = new CEdge[m_nEdge]; 	
 	for(i=0;i<m_nEdge;i++)
 		m_pEdge[i] = pMesh->m_pEdge[i];
-	m_nFace = pMesh->m_nFace;	 				//面数
-	m_pFace = new CFace[m_nFace];				//面表
+	m_nFace = pMesh->m_nFace;	 
+	m_pFace = new CFace[m_nFace];	
 	for(i=0;i<m_nFace;i++)
 		m_pFace[i] = pMesh->m_pFace[i];
 
@@ -142,8 +130,8 @@ bool CMesh::load(string sFilename)
 
 	ifstream fin(sFilename.c_str());
 
-	_VECTORLIST VertexList;//临时存储所有点的链表
-	_UINTLIST FaceList;//临时存储所有面包含的点的信息
+	_VECTORLIST VertexList;
+	_UINTLIST FaceList;
 	UINT l[3];
 	Vector3D vector;
 	Vector3D vMin(1e9,1e9,1e9);
@@ -151,14 +139,14 @@ bool CMesh::load(string sFilename)
 
 
 	string strLine; 
-	while (getline(fin, strLine)) {//将点和面的信息临时存在VertexList和FaceList中
+	while (getline(fin, strLine)) {
 		if (strLine.length() == 0) continue;
-		if (strLine[0] == 'v') { //A line starting with a 'v' designating a vertex position information
+		if (strLine[0] == 'v') { 
 			istringstream sin(strLine);
 			char tmp;
 			sin >> tmp >> vector.x >> vector.y >> vector.z;
 			VertexList.push_back(Vector3D(vector));
-			//计算所有点的包围盒
+		
 			if(vector.x<vMin.x){
 				vMin.x=vector.x;
 			}else if(vector.x>vMax.x){
@@ -184,11 +172,10 @@ bool CMesh::load(string sFilename)
 		}
 	}
 	fin.close();
-	//根据包围盒将物体中心移至原点，同时进行归一化
-	vector=vMax-vMin;
-	double d=__max(vector.x,vector.y);
-	d=0.5*__max(d,vector.z);
-	vector=0.5*(vMax+vMin);//偏移量
+	vector = vMax - vMin;
+	double d = max(vector.x, vector.y);
+	d = 0.5 * max(d, vector.z);
+	vector=0.5 * (vMax + vMin);
 
 	m_nVertex=(UINT) VertexList.size();
 	m_nFace=(UINT) FaceList.size()/3;
@@ -196,15 +183,21 @@ bool CMesh::load(string sFilename)
 
 	//read vertices and faces
 	m_pVertex = new CVertex[m_nVertex];
-	if (m_pVertex==NULL) {clear(); return false;}//out of memory
+	if (m_pVertex==NULL) {
+		clear(); 
+		return false;
+	}//out of memory
 	m_pFace = new CFace[m_nFace];
-	if (m_pFace == NULL) {clear(); return false;}//out of memory
+	if (m_pFace == NULL) {
+		clear(); 
+		return false;
+	}//out of memory
 
 	_VECTORLIST::iterator iVertex = VertexList.begin();
 	_UINTLIST::iterator iFace = FaceList.begin();
 
 	for(int i = 0; i < (int)m_nVertex; i++){
-		m_pVertex[i].m_vPosition=(*(iVertex++)-vector)/d;
+		m_pVertex[i].m_vPosition = (*(iVertex++)-vector)/d;
 	}
 	for(int i = 0; i < (int)m_nFace; i++)
 	{
@@ -220,26 +213,27 @@ bool CMesh::load(string sFilename)
 
 bool CMesh::reconstruct()
 {
-	_VECTORLIST VertexList;//临时存储所有点的链表
-	_UINTLIST FaceList;//临时存储所有面包含的点的信息
+	_VECTORLIST VertexList;
+	_UINTLIST FaceList;
 
 	Vector3D vector;
 	Vector3D vMin;
 	Vector3D vMax;
-	bool bFirst=true;
+	bool bFirst = true;
 
-	UINT i;
 	UINT* old2new = new UINT[m_nVertex];
 	UINT iNewIndex=0;
-	for(i=0;i<m_nVertex;i++)
+	for(UINT i = 0; i < m_nVertex; i++)
 	{
 		VertexList.push_back(m_pVertex[i].m_vPosition);
 		old2new[i]=iNewIndex++;
 	}
 
-	for(i=0;i<m_nFace;i++)
-		for(short j=0;j<3;j++)
+	for(UINT i = 0; i < m_nFace; i++) {
+		for(short j=0;j<3;j++) {
 			FaceList.push_back(old2new[m_pFace[i].m_piVertex[j]]);
+		}
+	}
 
 	clear();
 
@@ -248,16 +242,23 @@ bool CMesh::reconstruct()
 	m_nEdge=(UINT) 3*m_nFace;
 	//read vertices and faces
 	m_pVertex = new CVertex[m_nVertex];
-	if (m_pVertex==NULL) {clear(); return false;}//out of memory
+	if (m_pVertex == NULL) {
+		clear(); 
+		return false;
+	}//out of memory
 	m_pFace = new CFace[m_nFace];
-	if (m_pFace == NULL) {clear(); return false;}//out of memory
+	if (m_pFace == NULL) {
+		clear(); 
+		return false;
+	}//out of memory
 
 	_VECTORLIST::iterator iVertex = VertexList.begin();
 	_UINTLIST::iterator iFace = FaceList.begin();
 
-	for(i=0;i<m_nVertex;i++)
+	for(UINT i = 0; i < m_nVertex; i++) {
 		m_pVertex[i].m_vPosition=*iVertex++;
-	for(i=0;i<m_nFace;i++)
+	}
+	for(UINT i = 0; i < m_nFace; i++) 
 	{
 		m_pFace[i].Create(3);
 		for(short j=0;j<3;j++)
@@ -272,16 +273,22 @@ bool CMesh::reconstruct()
 
 bool CMesh::construct()
 {
-	if ((m_pVertex==NULL)||(m_pFace==NULL)) return false;//empty
+	if (m_pVertex == NULL || m_pFace==NULL) {
+		return false;//empty
+	}
 
-	if(m_pEdge!=NULL){delete[] m_pEdge;m_pEdge=NULL;}//delete old edgelist
+	if(m_pEdge!=NULL){
+		delete[] m_pEdge;
+		m_pEdge=NULL;
+	}//delete old edgelist
 
 	m_bClosed = true;
 
-	UINT i;
-	if(m_nEdge==0)		//在load过程中应该已经计算过边数，如果仍未计算则重新扫描所有面，得到总边数
-		for(i=0;i<m_nFace;i++)
+	if(m_nEdge == 0) {
+		for(UINT i = 0; i < m_nFace; i++) {
 			m_nEdge+=m_pFace[i].m_nType;
+		}
+	}
 
 	m_pEdge = new CEdge[m_nEdge];
 	
@@ -290,23 +297,19 @@ bool CMesh::construct()
 	UINT iEdge=0;
 	UINT iVertex;
 
-	for(i=0;i<m_nFace;i++)//扫描所有面
-	{
-		calcFaceNormal(i);//顺便计算该面的法向和面积
+	for(UINT i = 0; i < m_nFace; i++) {
+		calcFaceNormal(i);
 
 		nType=m_pFace[i].m_nType;
-		for(j=0;j<nType;j++)//对每个面建立相关的点、边、面的连接信息
+		for(j=0;j<nType;j++)
 		{
-			//面的连接信息
-			m_pFace[i].m_piEdge[j]=iEdge;//按顺序给每个边分配编号
-			//点的连接信息
+			m_pFace[i].m_piEdge[j]=iEdge;
 			iVertex=m_pFace[i].m_piVertex[j];
-			m_pVertex[iVertex].m_nValence++;//度数加1
-			m_pVertex[iVertex].m_lEdgeList.push_back(iEdge);//先将该边加入点的临时边表
-			//边的连接信息
+			m_pVertex[iVertex].m_nValence++;
+			m_pVertex[iVertex].m_lEdgeList.push_back(iEdge);
 			m_pEdge[iEdge].m_iFace=i;
-			m_pEdge[iEdge].m_iVertex[0]=iVertex;//源点
-			m_pEdge[iEdge].m_iVertex[1]=m_pFace[i].m_piVertex[(j+1)%nType];//目标点
+			m_pEdge[iEdge].m_iVertex[0]=iVertex;
+			m_pEdge[iEdge].m_iVertex[1]=m_pFace[i].m_piVertex[(j+1)%nType];
 			m_pEdge[iEdge].m_iNextEdge=iEdge+1;
 			iEdge++;
 
@@ -318,13 +321,11 @@ bool CMesh::construct()
 	_UINTLIST::iterator iv;
 	UINT iSrcVertex,iDesVertex;
 	bool bFlag;
-	for(i=0;i<m_nEdge;i++)//扫描所有边，生成所有边的m_iTwinEdge的连接关系
-	{
-		if(m_pEdge[i].m_iTwinEdge!=-1)//已经计算过
+	for (UINT i = 0; i < m_nEdge; i++) {
+		if(m_pEdge[i].m_iTwinEdge!=-1)
 			continue;
-		iSrcVertex=m_pEdge[i].m_iVertex[0];//源点
-		iDesVertex=m_pEdge[i].m_iVertex[1];//目标点
-		//遍历从目标点发出的所有边，看其中有没有回到源点的边
+		iSrcVertex=m_pEdge[i].m_iVertex[0];
+		iDesVertex=m_pEdge[i].m_iVertex[1];
 		bFlag=true;
 		for (iv = m_pVertex[iDesVertex].m_lEdgeList.begin(); iv != m_pVertex[iDesVertex].m_lEdgeList.end(); iv++)
 		{
@@ -337,7 +338,6 @@ bool CMesh::construct()
 				break;
 			}
 		}
-		//如果没有，说明源点是边界点
 		if(bFlag)
 		{
 			m_pVertex[iSrcVertex].m_bIsBoundary = true;
@@ -348,26 +348,21 @@ bool CMesh::construct()
 	short nValence;
 	UINT iTwinEdge;
 	
-	//初始化Wedge的大小为2倍的m_nVertex，以便以后进行扩展
 
-	for(i=0;i<m_nVertex;i++)//扫描所有点，根据每个点的m_lEdgelist,按顺时针方向生成m_piEdge,
+	for(UINT i = 0; i < m_nVertex; i++)
 	{
 		nValence=m_pVertex[i].m_nValence;
-		if(nValence<2)//某点的度数小于2
+		if(nValence<2)
 			m_pVertex[i].m_bIsBoundary=true;
 
-		if(nValence==0)//网格中包含孤立的点，应该禁止
+		if(nValence==0)
 			continue;
 
 		if(m_pVertex[i].m_piEdge!=NULL)
 			delete[] m_pVertex[i].m_piEdge;
 		m_pVertex[i].m_piEdge=new UINT[nValence];
 
-
-//		if(m_pVertex[i].m_piEdge[0]==-1)//temp
-//			return false;
-
-		if(m_pVertex[i].m_bIsBoundary)//边界点
+		if(m_pVertex[i].m_bIsBoundary)
 		{
 			for (iv = m_pVertex[i].m_lEdgeList.begin(); iv != m_pVertex[i].m_lEdgeList.end(); iv++)
 			{
@@ -376,7 +371,7 @@ bool CMesh::construct()
 				for(j=1;j<nValence;j++)
 				{
 					iTwinEdge=m_pEdge[m_pVertex[i].m_piEdge[j-1]].m_iTwinEdge;
-					if(iTwinEdge==-1)//边界Edge
+					if(iTwinEdge==-1)
 					{
 						bFlag=false;
 						break;
@@ -388,21 +383,21 @@ bool CMesh::construct()
 			}
 		
 		}
-		else//内部点
+		else
 		{
 			iv = m_pVertex[i].m_lEdgeList.begin();
 			m_pVertex[i].m_piEdge[0]=*iv;
-			for(j=1;j<nValence;j++)//将该点发出的half edge顺时针存入m_piEdge
+			for(j=1;j<nValence;j++)
 			{
 				iTwinEdge=m_pEdge[m_pVertex[i].m_piEdge[j-1]].m_iTwinEdge;
 				m_pVertex[i].m_piEdge[j]=m_pEdge[iTwinEdge].m_iNextEdge;
 			}
 		}
-		m_pVertex[i].m_lEdgeList.clear();//清除临时链表
+		m_pVertex[i].m_lEdgeList.clear();
 		for(j=0;j<nValence;j++)
 			m_pVertex[i].m_lEdgeList.push_back(m_pVertex[i].m_piEdge[j]);
 
-		calcVertexNormal(i);//根据点的邻面信息计算该点的平均法向
+		calcVertexNormal(i);
 	}
 
 	return true;
@@ -416,18 +411,20 @@ void CMesh::calcFaceNormal(UINT i)
 	//get the vector
 	v[0] = m_pVertex[m_pFace[i].m_piVertex[2]].m_vPosition-m_pVertex[m_pFace[i].m_piVertex[0]].m_vPosition;
 
-	if(m_pFace[i].m_nType==3)
+	if(m_pFace[i].m_nType==3) {
 		v[1] = m_pVertex[m_pFace[i].m_piVertex[2]].m_vPosition-m_pVertex[m_pFace[i].m_piVertex[1]].m_vPosition;
-	else
+	} else {
 		v[1] = m_pVertex[m_pFace[i].m_piVertex[3]].m_vPosition-m_pVertex[m_pFace[i].m_piVertex[1]].m_vPosition;
+	}
 	m_pFace[i].m_vNormal=v[0]^v[1];
 
-	if(m_pFace[i].m_nType == 3)
-		m_pFace[i].m_dArea = 0.5*m_pFace[i].m_vNormal.normalize();//将法向单位化同时计算了该三角面的面积
-	else if(m_pFace[i].m_nType == 4)
-		m_pFace[i].m_dArea = m_pFace[i].m_vNormal.normalize();//将法向单位化同时计算了该四边形面的面积
-	else
+	if(m_pFace[i].m_nType == 3) {
+		m_pFace[i].m_dArea = 0.5*m_pFace[i].m_vNormal.normalize();
+	} else if(m_pFace[i].m_nType == 4) {
+		m_pFace[i].m_dArea = m_pFace[i].m_vNormal.normalize();
+	} else {
 		m_pFace[i].m_vNormal.normalize();
+	}
 
 	Vector3D vMassPoint;
 
@@ -438,8 +435,7 @@ void CMesh::calcFaceNormal(UINT i)
 	m_pFace[i].m_vMassPoint = vMassPoint;
 }
 
-void CMesh::calcVertexNormal(UINT i)
-{
+void CMesh::calcVertexNormal(UINT i) {
 	Vector3D v;
 	UINT iFace;
 	short valence=m_pVertex[i].m_nValence;

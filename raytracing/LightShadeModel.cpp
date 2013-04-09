@@ -14,13 +14,13 @@ void LightShadeModel::setShadeModel(ShadeModel sm){
 Color3 LightShadeModel::calcColor(
 		Vector3D pos, Vector3D dir, Vector3D n, Color3 color,
 		LightSource *ls, Model *m, UINT face_id,
-		bool amb_only){
+		UINT colorMask){
 
 	if (lightModel == PhongLighting){
 		Vector3D l = ls->pos - pos;
 		l.normalize();
 		return calcPhongLighting(n, Vector3D(0,0,0) - dir, l, color, 
-			&(ls->material), &(m->material), amb_only);
+			ls->color, &(m->material), colorMask);
 	} else {
 		return Color3(0,0,0);
 	}
@@ -56,23 +56,31 @@ Vector3D LightShadeModel::calcPhongNormal(Vector3D pos, Model *m, UINT face_id){
 
 Color3 LightShadeModel::calcPhongLighting(
 		Vector3D n, Vector3D v, Vector3D l, 
-		Color3 v_color, Material* ls_mat,
-		Material* obj_mat, bool amb_only){
+		Color3 v_color, Color3 ls_clr,
+		Material* obj_mat, UINT colorMask){
 	
-	Color3 ac = v_color * ls_mat->ambient * obj_mat->ambient;
-	if (amb_only) {
-		return ac;
+	Color3 totalColor(0, 0, 0);
+	if (colorMask & MASK_AMBIENT) {
+		Color3 ac = v_color * ls_clr * obj_mat->ambient;
+		totalColor += ac;
 	}
 
-	Vector3D r =  2*fabs(l*n)*n - l;
+	Vector3D r =  2 * (l * n) * n - l;
 
-	double diff = l*n;
-	if (diff < 0) diff = 0;
-	double spec = r*v;
-	if (spec < 0) spec = 0;
-	Color3 dc = diff * v_color * ls_mat->diffuse * obj_mat->diffuse;
-	spec = pow(spec, double(obj_mat->shininess));
-	Color3 sc = spec * v_color * ls_mat->specular * obj_mat->specular;
+	if (colorMask & MASK_DIFFUSE) {
+		double diff = l*n;
+		if (diff < 0) diff = 0;
+		Color3 dc = diff * v_color * ls_clr * obj_mat->diffuse;
+		totalColor += dc;
+	}
+	
+	if (colorMask & MASK_SPECULAR) {
+		double spec = r*v;
+		if (spec < 0) spec = 0;
+		spec = pow(spec, double(obj_mat->shininess));
+		Color3 sc = spec * v_color * ls_clr * obj_mat->specular;
+		totalColor += sc;
+	}
 
-	return ac + sc + dc;
+	return totalColor;
 }

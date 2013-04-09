@@ -20,7 +20,7 @@ RayTracer::RayTracer(Scene* scene, int H, int W, int ss,
 }
 
 RayTracer::~RayTracer(){
-	delete[] buffer;
+	delete buffer;
 	buffer = NULL;
 }
 
@@ -49,32 +49,35 @@ void RayTracer::render(){
 	double boundx = tan(scene->camera->h_ang);
 	double boundy = tan(scene->camera->v_ang);
 
-	for (UINT i = 0; i < (UINT)res_H; ++i) {
-	for (UINT j = 0; j < (UINT)res_W; ++j){
-		Color3 finalColor(0,0,0);
-		for (UINT it = 0; it < (UINT)super_sample; ++it) {
-		for (UINT jt = 0; jt < (UINT)super_sample; ++jt) {
-			double rx = double(j*super_sample + jt) / double(res_W * super_sample);
-			double ry = double(i*super_sample + it) / double(res_H * super_sample);
-			Vector3D dir((2*rx - 1) * boundx, 
-						 (1 - 2*ry) * boundy, 1);
-			dir.normalize();
-			Color3 c = trace(origin, dir, startColor, 0);
-			finalColor += c;
+	int count = 0;
+//	#pragma omp parallel for num_threads(DEFAULT_OMP_THREAD)
+	for (int i = 0; i < res_H; ++i) {
+		for (int j = 0; j < res_W; ++j){
+			Color3 finalColor(0,0,0);
+			for (UINT it = 0; it < (UINT)super_sample; ++it) {
+				for (UINT jt = 0; jt < (UINT)super_sample; ++jt) {
+					double rx = double(j*super_sample + jt) / double(res_W * super_sample);
+					double ry = double(i*super_sample + it) / double(res_H * super_sample);
+					Vector3D dir((2*rx - 1) * boundx, 
+								 (2*ry - 1) * boundy, 1);
+					dir.normalize();
+					Color3 c = trace(origin, dir, startColor, 0);
+					finalColor += c;
+				}
+			}
+			finalColor *= 1 / double(super_sample*super_sample);
+			finalColor.truncate();
+			unsigned char cr = (unsigned char)(finalColor.r * 255);
+			unsigned char cg = (unsigned char)(finalColor.g * 255);
+			unsigned char cb = (unsigned char)(finalColor.b * 255);
+			buffer->set_linear_atXY(cr,(float)j,(float)i,0,0);
+			buffer->set_linear_atXY(cg,(float)j,(float)i,0,1);
+			buffer->set_linear_atXY(cb,(float)j,(float)i,0,2);
 		}
-		}
-		finalColor *= 1 / double(super_sample*super_sample);
-		finalColor.truncate();
-		unsigned char cr = (unsigned char)(finalColor.r * 255);
-		unsigned char cg = (unsigned char)(finalColor.g * 255);
-		unsigned char cb = (unsigned char)(finalColor.b * 255);
-		buffer->set_linear_atXY(cr,(float)j,(float)i,0,0);
-		buffer->set_linear_atXY(cg,(float)j,(float)i,0,1);
-		buffer->set_linear_atXY(cb,(float)j,(float)i,0,2);
-	}
-		if ((i+1) % 10 == 0){		
-			std::cout << "\t" << (i+1) << "/" << res_H << endl;
-			buffer->save("star.bmp");
+		++ count;
+		if ((count + 1) % 10 == 0){		
+			std::cout << "\t" << (count + 1) << "/" << res_H << endl;
+			buffer->save(DEFAULT_OUTPUT);
 		}
 	}
 }
@@ -93,9 +96,10 @@ Color3 RayTracer::trace(Vector3D ori, Vector3D dir, Color3 rayColor, int depth){
 	UINT model_id = -1;
 	UINT face_id = -1;
 
-	if (!findClosestFace(ori, dir, model_id, face_id, t)){
+	if (!findClosestFace(ori, dir, model_id, face_id, t, Color3())){
 		return totalColor;
 	}
+	Material mat = scene->modelList[model_id]->material;
 	Vector3D p = ori + dir * t;
 	Vector3D n = LightShadeModel::calcNormal(p, 
 					scene->modelList[model_id], face_id);
@@ -106,29 +110,34 @@ Color3 RayTracer::trace(Vector3D ori, Vector3D dir, Color3 rayColor, int depth){
 		UINT tmp_mid = -1, tmp_fid = -1;
 		double tmp_t = 0;
 		Color3 currentColor(0,0,0);
-		bool amb_only = findClosestFace(p, d, tmp_mid, tmp_fid, tmp_t);
-		currentColor = 
+		Color3 opaque;
+		bool in_shadow = findClosestFace(p, d, tmp_mid, tmp_fid, tmp_t, opaque);
+		UINT mask = MASK_AMBIENT;
+		if (!in_shadow) {
+			mask |= (MASK_DIFFUSE | MASK_SPECULAR);
+		}
+		Color3 current_ambient = 
 			LightShadeModel::calcColor(p, dir, n, rayColor, ls, 
-							scene->modelList[model_id], face_id, amb_only);
-		totalColor += currentColor;
+							scene->modelList[model_id], face_id, MASK_AMBIENT);
+		Color3 current_diffspec = 
+			LightShadeModel::calcColor(p, dir, n, rayColor, ls,
+							scene->modelList[model_id], face_id, MASK_DIFFUSE | MASK_SPECULAR);
+		currentColor = current_ambient + current_diffspec * opaque;
+		totalColor += currentColor * (Color3(1, 1, 1) - mat.refract);
 	}
 
 	
-	Vector3D v = Vector3D(0,0,0)-dir;
-	Vector3D rfl = 2*fabs(v*n) * n - v;
+	Vector3D v = Vector3D(0,0,0) - dir;
+	Vector3D rfl = 2 * (v * n) * n - v;
 
 	Color3 rflRayColor = rayColor;
-	rflRayColor.r *= scene->modelList[model_id]->material.reflect.r;
-	rflRayColor.g *= scene->modelList[model_id]->material.reflect.g;
-	rflRayColor.b *= scene->modelList[model_id]->material.reflect.b;
+	rflRayColor *= mat.reflect;
 	Color3 rfl_color = trace(p, rfl, rflRayColor, depth+1);
 	
 	Color3 rfrRayColor = rayColor;
-	rfrRayColor.r *= scene->modelList[model_id]->material.refract.r;
-	rfrRayColor.g *= scene->modelList[model_id]->material.refract.g;
-	rfrRayColor.b *= scene->modelList[model_id]->material.refract.b;
+	rfrRayColor *= mat.refract;
 	Color3 rfr_color = trace(p, dir, rfrRayColor, depth+1);
-
+	
 	totalColor += rfl_color + rfr_color;
 	
 	return totalColor;
@@ -136,10 +145,11 @@ Color3 RayTracer::trace(Vector3D ori, Vector3D dir, Color3 rayColor, int depth){
 
 bool RayTracer::findClosestFace(Vector3D ori, Vector3D dir, 
 								UINT &model_id, UINT &face_id,
-								double &t_on_line){
+								double &t_on_line, Color3 &opaque){
 	model_id = -1;
 	face_id = -1;
 	t_on_line = 1e10;
+	opaque = Color3(1, 1, 1);
 
 	vector<UINT> vec;
 	vec.clear(); 
@@ -149,6 +159,7 @@ bool RayTracer::findClosestFace(Vector3D ori, Vector3D dir,
 		KdTree * kdtree = scene->modelList[i]->kdtree;
 		CMesh * mesh = scene->modelList[i]->mesh;
 		kdtree->searchLine(ori, dir, DOUBLE_EPS, scene->camera->b_plane, vec);
+		bool pierce = false;
 		for (UINT j = 0; j < vec.size(); ++j) {
 			UINT fid = vec[j];
 			Vector3D p(0,0,0);
@@ -158,14 +169,14 @@ bool RayTracer::findClosestFace(Vector3D ori, Vector3D dir,
 			Vector3D n = mesh->m_pFace[fid].m_vNormal;
 			double dn = dir * n;
 			if (EQUALZERO(dn)) {
-				if (EQUALZERO(10*(a-ori)*n)) {
+				if (EQUALZERO(10 * (a - ori) * n)) {
 					p = a;
-					t = (a-ori).normalize();
+					t = (a - ori).normalize();
 				} else {
 					continue;
 				}
 			} else {
-				t = (a*n-ori*n)/dn;	
+				t = (a * n - ori * n) / dn;	
 				p = ori + dir * t;
 			}
 			UINT* vList = mesh->m_pFace[fid].m_piVertex;
@@ -185,7 +196,11 @@ bool RayTracer::findClosestFace(Vector3D ori, Vector3D dir,
 				t_on_line = t;
 				model_id = i;
 				face_id = fid;
+				pierce = true;
 			}
+		}
+		if (pierce) {
+			opaque *= scene->modelList[i]->material.refract;
 		}
 	}
 	if (model_id == -1 || face_id == -1 || t_on_line > 1e9){

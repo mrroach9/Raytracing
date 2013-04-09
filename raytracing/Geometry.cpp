@@ -304,8 +304,15 @@ bool inTriangle(Vector3D v1, Vector3D v2, Vector3D v3,
 	if (EQUALZERO(area_123)) {
 		area_123 = v1.y*v2.z + v2.y*v3.z + v3.y*v1.z - 
 				   v1.z*v2.y - v2.z*v3.y - v3.z*v1.y;
-		alpha = Vector3D(area_yz_23, area_yz_31, area_yz_12);
-		alpha /= area_123;
+		if (EQUALZERO(area_123)) {
+			area_123 = v1.z*v2.x + v2.z*v3.x + v3.z*v1.x - 
+					   v1.x*v2.z - v2.x*v3.z - v3.x*v1.z;
+			alpha = Vector3D(area_zx_23, area_zx_31, area_zx_12);
+			alpha /= area_123;
+		} else {
+			alpha = Vector3D(area_yz_23, area_yz_31, area_yz_12);
+			alpha /= area_123;
+		}
 	} else {		
 		alpha = Vector3D(area_xy_23, area_xy_31, area_xy_12);
 		alpha /= area_123;

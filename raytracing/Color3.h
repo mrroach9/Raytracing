@@ -17,6 +17,7 @@ public:
 	Color3& operator+=(const Color3& c);
 	Color3& operator-=(const Color3& c);
 	Color3& operator*=(double u);
+	Color3& operator*=(const Color3& c);
 
 	friend Color3 operator+(const Color3& lc, const Color3& rc);
 	friend Color3 operator-(const Color3& lc, const Color3& rc);
