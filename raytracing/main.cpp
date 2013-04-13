@@ -27,6 +27,7 @@ int main(){
 	plane_model1->material.shininess = 1;
 	plane_model1->material.reflect = Color3(0.02, 0.02, 0.02);
 	plane_model1->material.refract = Color3(0, 0, 0);
+	plane_model1->material.refract_index = 1;
 	plane_model1->getTransformedMesh();
 
 	//Load Mesh
@@ -42,6 +43,7 @@ int main(){
 	plane_model2->material.shininess = 1;
 	plane_model2->material.reflect = Color3(0, 0, 0);
 	plane_model2->material.refract = Color3(0, 0, 0);
+	plane_model2->material.refract_index = 1;
 	plane_model2->getTransformedMesh();
 
 	//Load Mesh
@@ -57,6 +59,7 @@ int main(){
 	bunny_model->material.shininess = 10;
 	bunny_model->material.reflect = Color3(0.6,0.6,0.6);
 	bunny_model->material.refract = Color3(0,0,0);
+	bunny_model->material.refract_index = 1;
 	bunny_model->getTransformedMesh();
 
 	
@@ -72,6 +75,7 @@ int main(){
 	sphere_model->material.shininess = 10;
 	sphere_model->material.reflect = Color3(0.8, 0.8, 0.8);
 	sphere_model->material.refract = Color3(0, 0, 0);
+	sphere_model->material.refract_index = 1;
 	sphere_model->getTransformedMesh();
 
 	//Load Mesh
@@ -88,6 +92,7 @@ int main(){
 	crystal_model->material.shininess = 20;
 	crystal_model->material.reflect = Color3(0.2, 0.2, 0.2);
 	crystal_model->material.refract = Color3(0.7, 0.7, 0.8);
+	crystal_model->material.refract_index = 1.03;
 	crystal_model->getTransformedMesh();
 
 	cout<<"done."<<endl;

@@ -103,6 +103,10 @@ Color3 RayTracer::trace(Vector3D ori, Vector3D dir, Color3 rayColor, int depth){
 	Vector3D p = ori + dir * t;
 	Vector3D n = LightShadeModel::calcNormal(p, 
 					scene->modelList[model_id], face_id);
+
+	Vector3D rfr;
+	bool totalReflect = !calcRefracDir(dir, n, mat.refract_index, rfr);
+
 	for (UINT i = 0; i < scene->lightList.size(); ++i) {
 		LightSource* ls = scene->lightList[i];
 		Vector3D d = ls->pos - p;
@@ -123,7 +127,10 @@ Color3 RayTracer::trace(Vector3D ori, Vector3D dir, Color3 rayColor, int depth){
 			LightShadeModel::calcColor(p, dir, n, rayColor, ls,
 							scene->modelList[model_id], face_id, MASK_DIFFUSE | MASK_SPECULAR);
 		currentColor = current_ambient + current_diffspec * opaque;
-		totalColor += currentColor * (Color3(1, 1, 1) - mat.refract);
+		if (!totalReflect) {
+			currentColor *= (Color3(1, 1, 1) - mat.refract);
+		}
+		totalColor += currentColor;
 	}
 
 	
@@ -131,16 +138,44 @@ Color3 RayTracer::trace(Vector3D ori, Vector3D dir, Color3 rayColor, int depth){
 	Vector3D rfl = 2 * (v * n) * n - v;
 
 	Color3 rflRayColor = rayColor;
-	rflRayColor *= mat.reflect;
+	if (!totalReflect) {
+		rflRayColor *= mat.reflect;
+	} else {
+		rflRayColor *= (mat.reflect + mat.refract);
+	}
 	Color3 rfl_color = trace(p, rfl, rflRayColor, depth+1);
 	
 	Color3 rfrRayColor = rayColor;
 	rfrRayColor *= mat.refract;
-	Color3 rfr_color = trace(p, dir, rfrRayColor, depth+1);
-	
+	Color3 rfr_color(0, 0, 0);
+	if (!totalReflect) {
+		rfr_color = trace(p, rfr, rfrRayColor, depth+1);	
+	}
 	totalColor += rfl_color + rfr_color;
 	
 	return totalColor;
+}
+
+bool RayTracer::calcRefracDir(Vector3D dir, Vector3D n, double refrac_ind,
+				Vector3D &out) {
+	dir = -1 * dir;
+	double c1 = dir * n;
+	double l = 0;
+	if (c1 < 0) {	// From glass to air
+		l = refrac_ind;	// refrac_ind > 1
+		n = -1 * n;
+	} else {	// From air to glass
+		l = 1.0 / refrac_ind;
+	}
+	c1 = dir * n;
+	double c2 = 1 - l * l + l * l * c1 * c1; 
+	if (c2 < DOUBLE_EPS) {	// total reflection
+		return false;
+	}
+	c2 = c1 * l - sqrt(c2);
+	out = c2 * n - l * dir;
+	out.normalize();
+	return true;
 }
 
 bool RayTracer::findClosestFace(Vector3D ori, Vector3D dir, 

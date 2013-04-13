@@ -48,6 +48,8 @@ private:
 	bool findClosestFace(Vector3D ori, Vector3D dir, 
 						 UINT &model_id, UINT &face_id,
 						 double &t, Color3 &opaque);
+	bool calcRefracDir(Vector3D dir, Vector3D n, double refrac_ind,
+					   Vector3D &out);
 };
 
 #endif //_RAY_TRACER_H_
