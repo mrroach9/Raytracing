@@ -50,7 +50,7 @@
 				"mesh_file" : "./model/sphere_2000_uniform.obj",
 				"scale" : [0.9, 0.9, 0.9],
 				"rotation" : [0, 0, 0],
-				"translation" : [2.3, 1.5, 10],
+				"translation" : [2, 1.5, 10],
 				"material" : {
 					"ambient" : [0, 0.02, 0.08],
 					"diffuse" : [0, 0.04, 0.12],
@@ -78,9 +78,9 @@
 			},
 			{
 				"mesh_file" : "./model/brick.obj",
-				"scale" : [0.9, 0.4, 0.3],
+				"scale" : [0.9, 0.4, 0.35],
 				"rotation" : [0, 0, 0],
-				"translation" : [-2.5, 1.2, 8],
+				"translation" : [-2.5, 1.2, 7.8],
 				"material" : {
 					"ambient" : [0.1, 0.1, 0.5],
 					"diffuse" : [0.7, 0.7, 0.5],
@@ -95,7 +95,7 @@
 				"mesh_file" : "./model/hand.5k.obj",
 				"scale" : [1.5, 1.5, 1.8],
 				"rotation" : [1.5708, -1.319, 0],
-				"translation" : [2.6, 2.35, 9.7],
+				"translation" : [2.3, 2.35, 9.7],
 				"material" : {
 					"ambient" : [0.60, 0.57, 0.41],
 					"diffuse" : [0.30, 0.28, 0.20],
@@ -135,6 +135,8 @@
 		"resolution" : [640, 360],
 		"supersample" : 2,
 		"max_recursion" : 4,
-		"output_file" : "render.bmp"
+		"output_file" : "render.bmp",
+		"openmp_block" : 4,
+		"openmp_thread_num" : 8
 	}
 }

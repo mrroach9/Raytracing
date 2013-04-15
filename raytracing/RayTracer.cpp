@@ -37,6 +37,8 @@ RayTracer::RayTracer(Scene* scene, Json::Value json) {
 	this->max_recurs = json["max_recursion"].asInt();
 	this->threshold = DEFAULT_THRESHOLD;
 	this->output_filename = json["output_file"].asString();
+	this->omp_block = json["openmp_block"].asInt();
+	this->omp_thread = json["openmp_thread_num"].asInt();
 }
 
 RayTracer::~RayTracer(){
@@ -70,34 +72,35 @@ void RayTracer::render(){
 	double boundy = tan(scene->camera->v_ang);
 
 	int count = 0;
-//	#pragma omp parallel for num_threads(DEFAULT_OMP_THREAD)
-	for (int i = 0; i < res_H; ++i) {
-		for (int j = 0; j < res_W; ++j){
+
+	#pragma omp parallel for num_threads(omp_thread) schedule(dynamic, omp_block)
+	for (int y = 0; y < res_H; ++y) {
+		for (int x = 0; x < res_W; ++x) {
 			Color3 finalColor(0,0,0);
-			for (UINT it = 0; it < (UINT)super_sample; ++it) {
-				for (UINT jt = 0; jt < (UINT)super_sample; ++jt) {
-					double rx = double(j*super_sample + jt) / double(res_W * super_sample);
-					double ry = double(i*super_sample + it) / double(res_H * super_sample);
-					Vector3D dir((2*rx - 1) * boundx, 
-								 (2*ry - 1) * boundy, 1);
-					dir.normalize();
-					Color3 c = trace(origin, dir, startColor, 0);
-					finalColor += c;
-				}
+			for (UINT sub_ind = 0; sub_ind < (UINT)(super_sample * super_sample); ++sub_ind) {
+				int sub_y = sub_ind / super_sample;
+				int sub_x = sub_ind % super_sample;
+				double rx = double(x * super_sample + sub_x) / double(res_W * super_sample);
+				double ry = double(y * super_sample + sub_y) / double(res_H * super_sample);
+				Vector3D dir((2*rx - 1) * boundx, (2*ry - 1) * boundy, 1);
+				dir.normalize();
+				Color3 c = trace(origin, dir, startColor, 0);
+				finalColor += c;
 			}
 			finalColor *= 1 / double(super_sample*super_sample);
 			finalColor.truncate();
 			unsigned char cr = (unsigned char)(finalColor.r * 255);
 			unsigned char cg = (unsigned char)(finalColor.g * 255);
 			unsigned char cb = (unsigned char)(finalColor.b * 255);
-			buffer->set_linear_atXY(cr,(float)j,(float)i,0,0);
-			buffer->set_linear_atXY(cg,(float)j,(float)i,0,1);
-			buffer->set_linear_atXY(cb,(float)j,(float)i,0,2);
+			
+			buffer->set_linear_atXY(cr, (float)x, (float)y, 0, 0);
+			buffer->set_linear_atXY(cg, (float)x, (float)y, 0, 1);
+			buffer->set_linear_atXY(cb, (float)x, (float)y, 0, 2);
 		}
 		++ count;
-		if ((count + 1) % 10 == 0){		
-			std::cout << "\t" << (count + 1) << "/" << res_H << endl;
-			buffer->save(this->output_filename.c_str());
+		if (count % 10 == 0) {
+			cout << "\t" << count << "/" << res_H << endl;
+			saveImage();
 		}
 	}
 }
@@ -213,7 +216,7 @@ bool RayTracer::findClosestFace(Vector3D ori, Vector3D dir,
 		vec.clear();
 		KdTree * kdtree = scene->modelList[i]->kdtree;
 		CMesh * mesh = scene->modelList[i]->mesh;
-		kdtree->searchLine(ori, dir, DOUBLE_EPS, 1e6, vec);
+		kdtree->searchLine(ori, dir, DOUBLE_EPS, INFTY, vec);
 		bool pierce = false;
 		for (UINT j = 0; j < vec.size(); ++j) {
 			UINT fid = vec[j];

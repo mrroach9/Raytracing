@@ -5,8 +5,17 @@
 #include "Mesh.h"
 #include <vector>
 #include <iostream>
+#include <map>
+#include <time.h>
+#include <omp.h>
 
 using namespace std;
+
+#define MAX_THREAD	16
+
+//static int searchTime = 0;
+//static int faceTime = 0;
+//static int callTime = 0;
 
 class KdTreeNode{
 public:
@@ -31,13 +40,12 @@ public:
 	CMesh*		mesh;
 	double		radius;
 
-private:
-	unsigned char*		face_count;
 public:
 	KdTree();
 	KdTree(CMesh* mesh);
 	~KdTree();
-	
+private:
+	unsigned char*		face_count[MAX_THREAD];
 public:
 	void constructFromMesh();
 	void insert(UINT data, KdTreeNode* node);
@@ -49,7 +57,8 @@ public:
 
 private:
 	void search(Vector3D lower, Vector3D upper, KdTreeNode* node, vector<UINT> &fid_vec);
-	void searchLine_int(Vector3D v1, Vector3D v2, vector<UINT> &fid_vec);
+	void searchLine_int(Vector3D v1, Vector3D v2, vector<UINT> &vid_vec);
+	inline void searchLine_fast_int(Vector3D o, Vector3D d, double s, double t, KdTreeNode* node, vector<UINT> &vid_vec);
 	void getFaceList(vector<UINT> &vid_vec, vector<UINT> &fid_vec);
 };
 

@@ -19,6 +19,7 @@
 #define DEFAULT_THRESHOLD		0.001
 #define DEFAULT_OUTPUT			"render.jpg"
 #define DEFAULT_OMP_THREAD		8
+#define DEFAULT_OMP_BLOCK		4
 
 using namespace cimg_library;
 
@@ -30,6 +31,9 @@ private:
 	int super_sample;
 	int max_recurs;
 	double threshold;
+
+	int omp_thread;
+	int omp_block;
 
 	CImg<unsigned char>* buffer;
 	string output_filename;

@@ -7,3 +7,5 @@
 4 - Same with 3, no supersampling-based anti-aliasing.
 5 - With refraction
 6 - Fixed 2 bugs, another test with refraction, JSON implemented.
+7 - 1080p
+8 - Adjusted glass brick, parallel and faster kd-tree search.

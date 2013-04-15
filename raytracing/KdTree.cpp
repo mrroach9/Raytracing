@@ -53,10 +53,11 @@ KdTree::KdTree(CMesh* mesh){
 }
 
 KdTree::~KdTree(){
-	delete[] face_count;
 	delete root;
+	for (int i = 0; i < MAX_THREAD; ++i) {
+		delete[] face_count[i];
+	}
 }
-
 
 void KdTree::constructFromMesh(){
 	Vector3D lowerBound =  INFTY * Vector3D(1,1,1);
@@ -81,8 +82,10 @@ void KdTree::constructFromMesh(){
 	}
 
 	radius *= 1.01;
-	face_count = new unsigned char[mesh->m_nFace];
-	memset(face_count, 0, sizeof(unsigned char)*mesh->m_nFace);
+	for (int i = 0; i < MAX_THREAD; ++i) {
+		face_count[i] = new unsigned char[mesh->m_nFace];
+		memset(face_count[i], 0, sizeof(unsigned char)*mesh->m_nFace);
+	}
 
 	this->root = new KdTreeNode(NULL, 0, lowerBound, upperBound);
 	for (UINT i = 0; i < mesh->m_nVertex; ++i) {
@@ -139,6 +142,7 @@ void KdTree::insert(UINT vid, KdTreeNode* node){
 }
 
 void KdTree::getFaceList(vector<UINT> &vid_vec, vector<UINT> &fid_vec){
+	int id = omp_get_thread_num();
 	for (UINT i = 0; i < vid_vec.size(); ++i){
 		for (UINT j = 0; j < (UINT)mesh->m_pVertex[vid_vec[i]].m_nValence; ++j){
 			UINT e = mesh->m_pVertex[vid_vec[i]].m_piEdge[j];
@@ -151,18 +155,17 @@ void KdTree::getFaceList(vector<UINT> &vid_vec, vector<UINT> &fid_vec){
 					break;
 				}
 			}
-			face_count[f] |= (1 << v_ind);
-			if (face_count[f] == 7) {
+			face_count[id][f] |= (1 << v_ind);
+			if (face_count[id][f] == 7) {
 				fid_vec.push_back(f);
-				face_count[f] = 15;
+				face_count[id][f] = 15;
 			}
 		}
 	}
 	for (UINT i = 0; i < fid_vec.size(); ++i) {
-		face_count[fid_vec[i]] = 0;
+		face_count[id][fid_vec[i]] = 0;
 	}
 }
-
 
 void KdTree::searchVertexInBox(Vector3D lower, Vector3D upper, vector<UINT> &vid_vec){
 	search(lower,upper,root, vid_vec);
@@ -237,7 +240,6 @@ bool KdTree::hasPoints(Vector3D lower, Vector3D upper, KdTreeNode* node){
 	return false;
 }
 
-
 void KdTree::searchLine_int(Vector3D v1, Vector3D v2, vector<UINT> &vid_vec){
 	Vector3D lb(min(v1.x,v2.x), min(v1.y,v2.y), min(v1.z,v2.z));
 	Vector3D ub = v1 + v2 - lb;
@@ -252,10 +254,76 @@ void KdTree::searchLine_int(Vector3D v1, Vector3D v2, vector<UINT> &vid_vec){
 	
 }
 
+inline void KdTree::searchLine_fast_int(Vector3D o, Vector3D d, double s, double t, 
+								 KdTreeNode* node, vector<UINT> &vid_vec) {
+	if (node->left == NULL) {
+		if (node->vid == -1) {
+			return;
+		} else {
+			Vector3D point = mesh->m_pVertex[node->vid].m_vPosition;
+			Vector3D distVec = ((point - o) * d) * d - point + o;
+			double dist = distVec.normalize();
+			if (dist < this->radius + DOUBLE_EPS) {
+				vid_vec.push_back(node->vid);
+			}
+		}
+	} else {
+		double mint = 1e9;
+		double maxt = -1e9;
+		Vector3D lower = node->lowerBound - radius * Vector3D(1, 1, 1);
+		Vector3D upper = node->upperBound + radius * Vector3D(1, 1, 1);
+		double dt[6];
+		for (int i = 0; i < 6; ++i) {
+			dt[i] = 1e9;
+		}
+		if (fabs(d.x) > DOUBLE_EPS) {
+			dt[0] = (lower.x - o.x) / d.x;
+			dt[1] = (upper.x - o.x) / d.x;
+		}
+		if (fabs(d.y) > DOUBLE_EPS) {
+			dt[2] = (lower.y - o.y) / d.y;
+			dt[3] = (upper.y - o.y) / d.y;
+		}
+		if (fabs(d.z) > DOUBLE_EPS) {
+			dt[4] = (lower.z - o.z) / d.z;
+			dt[5] = (upper.z - o.z) / d.z;
+		}
+		bool intersect = false;
+		for (int i = 0; i < 6; ++i) {
+			Vector3D tp = o + dt[i] * d;
+			if (upper.x + DOUBLE_EPS > tp.x && 
+				lower.x - DOUBLE_EPS < tp.x && 
+				upper.y + DOUBLE_EPS > tp.y && 
+				lower.y - DOUBLE_EPS < tp.y && 
+				upper.z + DOUBLE_EPS > tp.z && 
+				lower.z - DOUBLE_EPS < tp.z) {
+				intersect = true;
+				if (dt[i] < mint) {
+					mint = dt[i];
+				}
+				if (dt[i] > maxt) {
+					maxt = dt[i];
+				}
+			}
+		}
+		if (intersect && mint < t + DOUBLE_EPS && maxt > s - DOUBLE_EPS) {
+			searchLine_fast_int(o, d, max(s, mint), min(t, maxt), node->left, vid_vec);
+			searchLine_fast_int(o, d, max(s, mint), min(t, maxt), node->right, vid_vec);
+		}
+	}
+}
+
 void KdTree::searchLine(Vector3D origin, Vector3D dir, double s, double t, vector<UINT> &fid_vec){
-	Vector3D v1 = origin + dir * s;
-	Vector3D v2 = origin + dir * t;
 	vector<UINT> vid_vec(0);
-	searchLine_int(v1,v2,vid_vec);
+	//int start = clock();
+	searchLine_fast_int(origin, dir, s, t, root, vid_vec);
+	//int mid = clock();
 	getFaceList(vid_vec, fid_vec);
+	//int end = clock();
+	//searchTime += (mid - start);
+	//faceTime += (end - mid);
+	//++ callTime;
+	//if (callTime % 100000 == 0) {
+	//	cout << searchTime << " " << faceTime << " " << callTime << endl;
+	//}
 }

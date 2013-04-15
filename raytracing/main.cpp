@@ -8,6 +8,7 @@
 #include "Scene.h"
 #include "LightSource.h"
 #include "RayTracer.h"
+#include "KdTree.h"
 #include "jsoncpp\json.h"
 #include <fstream>
 #include <ctime>
