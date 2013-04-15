@@ -6,6 +6,22 @@ Scene::Scene(){
 	lightList.clear();
 }
 
+Scene::Scene(Json::Value json) {
+	modelList.clear();
+	lightList.clear();
+	for (UINT i = 0; i < json["models"].size(); ++i) {
+		modelList.push_back(new Model(json["models"][i]));
+	}
+	for (UINT i = 0; i < json["lights"].size(); ++i) {
+		lightList.push_back(new LightSource(json["lights"][i]));
+	}
+	camera = new Camera(json["camera"]);
+	transformModelAndLight();
+	for (UINT i = 0; i < modelList.size(); ++i) {
+		modelList[i]->buildKdTree();
+	}
+}
+
 void Scene::addModel(Model* m){
 	modelList.push_back(m);
 }

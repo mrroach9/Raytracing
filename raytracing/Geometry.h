@@ -6,10 +6,11 @@
 #define _GEOMETRY_H_
 
 #include <math.h>
+#include "jsoncpp\json.h"
 
 #define	PI	3.14159265358
-#define DOUBLE_EPS 1e-9
-#define INFTY	1e9
+#define DOUBLE_EPS  1e-9
+#define INFTY		1e5
 #define	EQUALZERO(x)	(fabs((x)) < DOUBLE_EPS)
 #define EQUALZERO_APP(x)  (fabs((x)) < 1e-6)
 
@@ -73,6 +74,7 @@ public :
 	Vector3D()	{	x = 0;	y = 0;	z = 0;	}
 	Vector3D(double xx,double yy,double zz)	{	x = xx;	y = yy;	z = zz;	}
 	Vector3D(const Vector3D& v)	{	x = v.x;	y = v.y;	z = v.z;	}
+	Vector3D(Json::Value json);
 
 	// operator
 	double	  length()		{	return sqrt(x*x + y*y + z*z);	}

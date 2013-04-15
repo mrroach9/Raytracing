@@ -19,6 +19,26 @@ RayTracer::RayTracer(Scene* scene, int H, int W, int ss,
 	this->threshold = thresh;
 }
 
+RayTracer::RayTracer(Scene* scene, Json::Value json) {
+	this->scene = scene;
+
+	if (json["light_model"].asString() == "PhongLighting") {
+		LightShadeModel::setLightModel(PhongLighting);
+	}
+	if (json["shade_model"].asString() == "PhongShading") {
+		LightShadeModel::setShadeModel(PhongShading);
+	} else if (json["shade_model"].asString() == "FacetedShading") {
+		LightShadeModel::setShadeModel(FacetedShading);
+	}
+
+	this->res_W = json["resolution"][(UINT)0].asInt();
+	this->res_H = json["resolution"][(UINT)1].asInt();
+	this->super_sample = json["supersample"].asInt();
+	this->max_recurs = json["max_recursion"].asInt();
+	this->threshold = DEFAULT_THRESHOLD;
+	this->output_filename = json["output_file"].asString();
+}
+
 RayTracer::~RayTracer(){
 	delete buffer;
 	buffer = NULL;
@@ -77,7 +97,7 @@ void RayTracer::render(){
 		++ count;
 		if ((count + 1) % 10 == 0){		
 			std::cout << "\t" << (count + 1) << "/" << res_H << endl;
-			buffer->save(DEFAULT_OUTPUT);
+			buffer->save(this->output_filename.c_str());
 		}
 	}
 }
@@ -96,7 +116,7 @@ Color3 RayTracer::trace(Vector3D ori, Vector3D dir, Color3 rayColor, int depth){
 	UINT model_id = -1;
 	UINT face_id = -1;
 
-	if (!findClosestFace(ori, dir, model_id, face_id, t, Color3())){
+	if (!findClosestFace(ori, dir, model_id, face_id, t, INFTY, Color3())){
 		return totalColor;
 	}
 	Material mat = scene->modelList[model_id]->material;
@@ -110,12 +130,12 @@ Color3 RayTracer::trace(Vector3D ori, Vector3D dir, Color3 rayColor, int depth){
 	for (UINT i = 0; i < scene->lightList.size(); ++i) {
 		LightSource* ls = scene->lightList[i];
 		Vector3D d = ls->pos - p;
-		d.normalize();
+		double dist = d.normalize();
 		UINT tmp_mid = -1, tmp_fid = -1;
 		double tmp_t = 0;
 		Color3 currentColor(0,0,0);
 		Color3 opaque;
-		bool in_shadow = findClosestFace(p, d, tmp_mid, tmp_fid, tmp_t, opaque);
+		bool in_shadow = findClosestFace(p, d, tmp_mid, tmp_fid, tmp_t, dist, opaque);
 		UINT mask = MASK_AMBIENT;
 		if (!in_shadow) {
 			mask |= (MASK_DIFFUSE | MASK_SPECULAR);
@@ -180,7 +200,7 @@ bool RayTracer::calcRefracDir(Vector3D dir, Vector3D n, double refrac_ind,
 
 bool RayTracer::findClosestFace(Vector3D ori, Vector3D dir, 
 								UINT &model_id, UINT &face_id,
-								double &t_on_line, Color3 &opaque){
+								double &t_on_line, double max_t, Color3 &opaque){
 	model_id = -1;
 	face_id = -1;
 	t_on_line = 1e10;
@@ -193,7 +213,7 @@ bool RayTracer::findClosestFace(Vector3D ori, Vector3D dir,
 		vec.clear();
 		KdTree * kdtree = scene->modelList[i]->kdtree;
 		CMesh * mesh = scene->modelList[i]->mesh;
-		kdtree->searchLine(ori, dir, DOUBLE_EPS, scene->camera->b_plane, vec);
+		kdtree->searchLine(ori, dir, DOUBLE_EPS, 1e6, vec);
 		bool pierce = false;
 		for (UINT j = 0; j < vec.size(); ++j) {
 			UINT fid = vec[j];
@@ -224,7 +244,8 @@ bool RayTracer::findClosestFace(Vector3D ori, Vector3D dir,
 			}
 			if (t < scene->camera->f_plane || 
 				t > scene->camera->b_plane ||
-				t < DOUBLE_EPS) {
+				t < DOUBLE_EPS			   ||
+				t > max_t - DOUBLE_EPS) {
 				continue;
 			}
 			if (t < t_on_line) {
@@ -244,3 +265,6 @@ bool RayTracer::findClosestFace(Vector3D ori, Vector3D dir,
 	return true;
 }
 
+void RayTracer::saveImage() {
+	buffer->save(this->output_filename.c_str());
+}

@@ -80,7 +80,7 @@ void KdTree::constructFromMesh(){
 		if (d > radius) radius = d;
 	}
 
-	radius *= 1.4;
+	radius *= 1.01;
 	face_count = new unsigned char[mesh->m_nFace];
 	memset(face_count, 0, sizeof(unsigned char)*mesh->m_nFace);
 
@@ -139,7 +139,6 @@ void KdTree::insert(UINT vid, KdTreeNode* node){
 }
 
 void KdTree::getFaceList(vector<UINT> &vid_vec, vector<UINT> &fid_vec){
-	memset(face_count, 0, sizeof(unsigned char)*mesh->m_nFace);
 	for (UINT i = 0; i < vid_vec.size(); ++i){
 		for (UINT j = 0; j < (UINT)mesh->m_pVertex[vid_vec[i]].m_nValence; ++j){
 			UINT e = mesh->m_pVertex[vid_vec[i]].m_piEdge[j];
@@ -158,6 +157,9 @@ void KdTree::getFaceList(vector<UINT> &vid_vec, vector<UINT> &fid_vec){
 				face_count[f] = 15;
 			}
 		}
+	}
+	for (UINT i = 0; i < fid_vec.size(); ++i) {
+		face_count[fid_vec[i]] = 0;
 	}
 }
 
@@ -208,8 +210,8 @@ bool KdTree::hasPoints(Vector3D lower, Vector3D upper, KdTreeNode* node){
 				lower.y - DOUBLE_EPS < point.y &&
 				lower.z - DOUBLE_EPS < point.z &&
 				upper.x + DOUBLE_EPS > point.x &&
-				upper.x + DOUBLE_EPS > point.y &&
-				upper.x + DOUBLE_EPS > point.z) {
+				upper.y + DOUBLE_EPS > point.y &&
+				upper.z + DOUBLE_EPS > point.z) {
 				return true;
 			}
 		}
@@ -217,9 +219,9 @@ bool KdTree::hasPoints(Vector3D lower, Vector3D upper, KdTreeNode* node){
 		if (lower.x - DOUBLE_EPS < node->lowerBound.x &&	
 			lower.y - DOUBLE_EPS < node->lowerBound.y &&
 			lower.z - DOUBLE_EPS < node->lowerBound.z &&
-			upper.x - DOUBLE_EPS > node->upperBound.x &&
-			upper.y - DOUBLE_EPS > node->upperBound.y &&
-			upper.z - DOUBLE_EPS > node->upperBound.z) {
+			upper.x + DOUBLE_EPS > node->upperBound.x &&
+			upper.y + DOUBLE_EPS > node->upperBound.y &&
+			upper.z + DOUBLE_EPS > node->upperBound.z) {
 			return true;
 		}
 		if(node->upperBound.x < lower.x) return false;

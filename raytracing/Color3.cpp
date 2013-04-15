@@ -1,5 +1,11 @@
 #include "Color3.h"
 
+Color3::Color3(Json::Value json) {
+	r = json[(UINT)0].asDouble();
+	g = json[(UINT)1].asDouble();
+	b = json[(UINT)2].asDouble();
+}
+
 Color3& Color3::operator=(const Color3& c){	
 	r = c.r;	g = c.g;	b = c.b;
 	return (*this);

@@ -1,0 +1,140 @@
+{
+	"scene" : {
+		"models" : [
+			{
+				"mesh_file" : "./model/openbox.obj",
+				"scale" : [8, 3, 15],
+				"rotation" : [0, 0, 0],
+				"translation" : [-2, 0, 5],
+				"material" : {
+					"ambient" : [0.4, 0.4, 0.4],
+					"diffuse" : [0.35, 0.35, 0.35],
+					"specular" : [0, 0, 0],
+					"shininess" : 1,
+					"reflect" : [0, 0, 0],
+					"refract" : [0, 0, 0],
+					"refract_index" : 1
+				}
+			},
+			{
+				"mesh_file" : "./model/5000_bunny.obj",
+				"scale" : [1.3, 1.3, 1.3],
+				"rotation" : [0, 3.1415, 3.1415],
+				"translation" : [-0.7, 1.7, 10],
+				"material" : {
+					"ambient" : [0.24725, 0.1995, 0.0745],
+					"diffuse" : [0.74164, 0.60648, 0.22648],
+					"specular" : [0.628821, 0.555802, 0.366065],
+					"shininess" : 15,
+					"reflect" : [0.6, 0.6, 0.6],
+					"refract" : [0, 0, 0],
+					"refract_index" : 1
+				}
+			},
+			{
+				"mesh_file" : "./model/sphere_2000_uniform.obj",
+				"scale" : [1.8, 1.8, 1.8],
+				"rotation" : [0, 0, 0],
+				"translation" : [-0.7, 0.8, 14],
+				"material" : {
+					"ambient" : [0.19225, 0.19225, 0.19225],
+					"diffuse" : [0.50754, 0.50754, 0.50754],
+					"specular" : [0.508273, 0.508273, 0.508273],
+					"shininess" : 15,
+					"reflect" : [0.8, 0.8, 0.8],
+					"refract" : [0, 0, 0],
+					"refract_index" : 1
+				}
+			},
+			{
+				"mesh_file" : "./model/sphere_2000_uniform.obj",
+				"scale" : [0.9, 0.9, 0.9],
+				"rotation" : [0, 0, 0],
+				"translation" : [2.3, 1.5, 10],
+				"material" : {
+					"ambient" : [0, 0.02, 0.08],
+					"diffuse" : [0, 0.04, 0.12],
+					"specular" : [0.9, 0.9, 1],
+					"shininess" : 20,
+					"reflect" : [0.2, 0.2, 0.2],
+					"refract" : [0.75, 0.75, 0.9],
+					"refract_index" : 1.20
+				}
+			},
+			{
+				"mesh_file" : "./model/happy_10k.obj",
+				"scale" : [2, 2, 2],
+				"rotation" : [0, 3.1415, 3.1415],
+				"translation" : [-3.5, 1.5, 10],
+				"material" : {
+					"ambient" : [0.135, 0.2225, 0.1575],
+					"diffuse" : [0.54, 0.89, 0.63],
+					"specular" : [0.316228, 0.316228, 0.316228],
+					"shininess" : 30,
+					"reflect" : [0.2, 0.2, 0.2],
+					"refract" : [0.06, 0.12, 0.08],
+					"refract_index" : 1.66
+				}
+			},
+			{
+				"mesh_file" : "./model/brick.obj",
+				"scale" : [0.9, 0.4, 0.3],
+				"rotation" : [0, 0, 0],
+				"translation" : [-2.5, 1.2, 8],
+				"material" : {
+					"ambient" : [0.1, 0.1, 0.5],
+					"diffuse" : [0.7, 0.7, 0.5],
+					"specular" : [0.7, 0.7, 0.5],
+					"shininess" : 20,
+					"reflect" : [0.05, 0.1, 0.3],
+					"refract" : [0.9, 0.85, 0.7],
+					"refract_index" : 2.0
+				}
+			},
+			{
+				"mesh_file" : "./model/hand.5k.obj",
+				"scale" : [1.5, 1.5, 1.8],
+				"rotation" : [1.5708, -1.319, 0],
+				"translation" : [2.6, 2.35, 9.7],
+				"material" : {
+					"ambient" : [0.60, 0.57, 0.41],
+					"diffuse" : [0.30, 0.28, 0.20],
+					"specular" : [0.02, 0.02, 0.01],
+					"shininess" : 2.0,
+					"reflect" : [0.01, 0.01, 0],
+					"refract" : [0.01, 0.01, 0.01],
+					"refract_index" : 1.33
+				}
+			}
+		],
+		"lights" : [
+			{
+				"position" : [-3, -1.2, -2],
+				"color" : [0.6, 0.6, 0.6]
+			},
+			{
+				"position" : [2.5, -3, -4],
+				"color" : [0.5, 0.3, 0.1]
+			}
+		],
+		"camera" : {
+			"position" : [1, 0.5, 0],
+			"up" : [0, 1, 0],
+			"direction" : [-0.15, 0, 1],
+			"horizontal_angle" : 0.5,
+			"vertical_angle" : 0.3,
+			"front_clip_plane" : 0.1,
+			"back_clip_plane" : 1000,
+			"focal_length" : 2,
+			"aperture" : 11
+		}
+	},
+	"renderer" : {
+		"light_model" : "PhongLighting",
+		"shade_model" : "PhongShading",
+		"resolution" : [640, 360],
+		"supersample" : 2,
+		"max_recursion" : 4,
+		"output_file" : "render.bmp"
+	}
+}

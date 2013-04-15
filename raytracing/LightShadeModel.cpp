@@ -1,7 +1,7 @@
 #include "LightShadeModel.h"
 
-LightModel LightShadeModel::lightModel = LightModel::PhongLighting;
-ShadeModel LightShadeModel::shadeModel = ShadeModel::PhongShading;
+LightModel LightShadeModel::lightModel = PhongLighting;
+ShadeModel LightShadeModel::shadeModel = PhongShading;
 
 void LightShadeModel::setLightModel(LightModel lm){
 	lightModel = lm;

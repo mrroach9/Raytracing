@@ -2,6 +2,7 @@
 #define _CAMERA_H_
 
 #include "Geometry.h"
+#include "jsoncpp\json.h"
 
 #define DEFAULT_V_ANG	atan(0.3)
 #define DEFAULT_H_ANG	atan(1.6/3)
@@ -13,31 +14,21 @@ public:
 	Vector3D	pos;
 	Vector3D	up;
 	Vector3D	dir;
-	double		h_ang;		//Half angle(from center line to leftmost
-	double		v_ang;
+	double		h_ang;		//Half angle (from center to leftmost border)
+	double		v_ang;		//Half angle (from center to upmost border)
 	double		f_plane;
 	double		b_plane;
-	//TODO: depth of field, focus length and aperture
+	double		focal_length;
+	double		aperture;	//The aperture here is the F-number: N = f/d, where
+							//f is the focal length and d is the diameter of
+							//aperture.
 
 public:
-	Camera(){
-		pos = Vector3D(0,0,0);
-		up  = Vector3D(0,1,0);
-		dir = Vector3D(0,0,1);
-		h_ang = DEFAULT_H_ANG;
-		v_ang = DEFAULT_V_ANG;
-		f_plane = DEFAULT_FORE;
-		b_plane = DEFAULT_BACK;
-	};
+	Camera();
 
-	Camera(Vector3D pos, Vector3D up, double h_ang, double v_ang, double f, double b){
-		this->pos = pos;
-		this->up = up;
-		this->h_ang = h_ang;
-		this->v_ang = v_ang;
-		this->f_plane = f;
-		this->b_plane = b;
-	}
+	Camera(Vector3D pos, Vector3D up, double h_ang, double v_ang, double f, double b);
+
+	Camera(Json::Value json);
 };
 
 #endif //_CAMERA_H_

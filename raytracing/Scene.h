@@ -6,6 +6,7 @@
 #include "LightSource.h"
 #include "Camera.h"
 #include "Geometry.h"
+#include "jsoncpp/json.h"
 
 using namespace std;
 
@@ -17,6 +18,7 @@ public:
 
 public:
 	Scene();
+	Scene(Json::Value json);
 	void addModel(Model* m);
 	void addLight(LightSource* l);
 	void setCamera(Camera* c);

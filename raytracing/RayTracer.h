@@ -9,6 +9,7 @@
 #include "LightShadeModel.h"
 #include "KdTree.h"
 #include "CImg.h"
+#include "jsoncpp\json.h"
 #include <omp.h>
 
 #define DEFAULT_RESOLUTION_H	360
@@ -16,7 +17,7 @@
 #define DEFAULT_SUPER_SAMPLE	1
 #define	DEFAULT_MAX_RECURSSION	4
 #define DEFAULT_THRESHOLD		0.001
-#define DEFAULT_OUTPUT			"render.bmp"
+#define DEFAULT_OUTPUT			"render.jpg"
 #define DEFAULT_OMP_THREAD		8
 
 using namespace cimg_library;
@@ -31,23 +32,26 @@ private:
 	double threshold;
 
 	CImg<unsigned char>* buffer;
+	string output_filename;
 
 public:
 	RayTracer(Scene* scene);
 	RayTracer(Scene* scene, int H, int W, int ss, 
 				int max_recurs, double thresh);
+	RayTracer(Scene* scene, Json::Value json);
 	~RayTracer();
 	void setResolution(int H, int W, int ss = 1);
 	void setTerminateCondition(int max_recurs, double thresh);
 
 	void render();
+	void saveImage();
 
 private:
 	Color3 trace(Vector3D ori, Vector3D dir, Color3 rayColor,
 				  int depth);
 	bool findClosestFace(Vector3D ori, Vector3D dir, 
 						 UINT &model_id, UINT &face_id,
-						 double &t, Color3 &opaque);
+						 double &t, double max_t, Color3 &opaque);
 	bool calcRefracDir(Vector3D dir, Vector3D n, double refrac_ind,
 					   Vector3D &out);
 };

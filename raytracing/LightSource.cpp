@@ -5,6 +5,11 @@ LightSource::LightSource(){
 	color = Color3(0, 0, 0);
 }
 
+LightSource::LightSource(Json::Value json) {
+	pos = Vector3D(json["position"]);
+	color = Color3(json["color"]);
+}
+
 LightSource::LightSource(Vector3D pos, Color3 color){
 	this->pos = pos;
 	this->color = color;

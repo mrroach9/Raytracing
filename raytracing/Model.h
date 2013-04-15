@@ -5,6 +5,7 @@
 #include "Material.h"
 #include "Geometry.h"
 #include "KdTree.h"
+#include "jsoncpp\json.h"
 
 class Model{
 public:
@@ -21,6 +22,7 @@ public:
 	Model();
 	Model(CMesh* mesh, Vector3D t, Vector3D r, Vector3D s, Material m);
 	Model(const Model &model);
+	Model(Json::Value json);
 	void getTransformedMesh();
 	void buildKdTree();
 };

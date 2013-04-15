@@ -84,8 +84,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Color3.cpp" />
     <ClCompile Include="Geometry.cpp" />
+    <ClCompile Include="jsoncpp\json_reader.cpp" />
+    <ClCompile Include="jsoncpp\json_value.cpp" />
+    <ClCompile Include="jsoncpp\json_writer.cpp" />
     <ClCompile Include="KdTree.cpp" />
     <ClCompile Include="LightShadeModel.cpp" />
     <ClCompile Include="LightSource.cpp" />
@@ -101,6 +105,15 @@
     <ClInclude Include="CImg.h" />
     <ClInclude Include="Color3.h" />
     <ClInclude Include="Geometry.h" />
+    <ClInclude Include="jsoncpp\autolink.h" />
+    <ClInclude Include="jsoncpp\config.h" />
+    <ClInclude Include="jsoncpp\features.h" />
+    <ClInclude Include="jsoncpp\forwards.h" />
+    <ClInclude Include="jsoncpp\json.h" />
+    <ClInclude Include="jsoncpp\json_batchallocator.h" />
+    <ClInclude Include="jsoncpp\reader.h" />
+    <ClInclude Include="jsoncpp\value.h" />
+    <ClInclude Include="jsoncpp\writer.h" />
     <ClInclude Include="KdTree.h" />
     <ClInclude Include="LightShadeModel.h" />
     <ClInclude Include="LightSource.h" />

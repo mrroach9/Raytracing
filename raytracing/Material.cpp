@@ -12,8 +12,8 @@ Material::Material(){
 }
 
 Material::Material(
-			Color3 amb, Color3 dif, Color3 spec, float shin,
-			Color3 rfl, Color3 rfr, float rfr_ind){
+			Color3 amb, Color3 dif, Color3 spec, double shin,
+			Color3 rfl, Color3 rfr, double rfr_ind){
 	ambient = amb;
 	diffuse = dif;
 	specular = spec;
@@ -39,6 +39,16 @@ Material::Material(UINT material_ID) {
 	reflect = Color3(0,0,0);
 	refract = Color3(0,0,0);
 	refract_index = 1;
+}
+
+Material::Material(Json::Value json) {
+	ambient = Color3(json["ambient"]);
+	diffuse = Color3(json["diffuse"]);
+	specular = Color3(json["specular"]);
+	shininess = json["shininess"].asDouble();
+	reflect = Color3(json["reflect"]);
+	refract = Color3(json["refract"]);
+	refract_index = json["refract_index"].asDouble();
 }
 
 Material& Material::operator = (const Material& m) {

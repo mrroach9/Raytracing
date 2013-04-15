@@ -159,6 +159,12 @@ double Vector2D::GetArea(Vector2D v)
 /////////////////////////////////////////////////////////////
 // Vector3D : 3D vector
 /////////////////////////////////////////////////////////////
+Vector3D::Vector3D(Json::Value json) {
+	x = json[(UINT)0].asDouble();
+	y = json[(UINT)1].asDouble();
+	z = json[(UINT)2].asDouble();
+}
+
 Vector3D& Vector3D::operator=(const Vector3D& v)
 {	
 	x = v.x;	y = v.y;	z = v.z;

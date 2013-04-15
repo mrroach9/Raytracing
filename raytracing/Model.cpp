@@ -27,6 +27,17 @@ Model::Model(const Model &m){
 	material = m.material;
 }
 
+Model::Model(Json::Value json) {
+	mesh = new CMesh();
+	mesh->load(json["mesh_file"].asString());
+	kdtree = NULL;
+	translation = Vector3D(json["translation"]);
+	rotation = Vector3D(json["rotation"]);
+	scale = Vector3D(json["scale"]);
+	material = Material(json["material"]);
+	this->getTransformedMesh();
+}
+
 void Model::getTransformedMesh(){
 	Vector3D r = rotation;
 	Vector3D rx = Vector3D(cos(r.y)*cos(r.z),
