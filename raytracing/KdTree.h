@@ -13,9 +13,9 @@ using namespace std;
 
 #define MAX_THREAD	16
 
-//static int searchTime = 0;
-//static int faceTime = 0;
-//static int callTime = 0;
+static int searchTime = 0;
+static int faceTime = 0;
+static int callTime = 0;
 
 class KdTreeNode{
 public:

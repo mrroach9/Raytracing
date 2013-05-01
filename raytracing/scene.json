@@ -133,7 +133,7 @@
 		"light_model" : "PhongLighting",
 		"shade_model" : "PhongShading",
 		"resolution" : [640, 360],
-		"supersample" : 2,
+		"supersample" : 1,
 		"max_recursion" : 4,
 		"output_file" : "render.bmp",
 		"openmp_block" : 4,

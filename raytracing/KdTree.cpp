@@ -88,6 +88,7 @@ void KdTree::constructFromMesh(){
 	}
 
 	this->root = new KdTreeNode(NULL, 0, lowerBound, upperBound);
+
 	for (UINT i = 0; i < mesh->m_nVertex; ++i) {
 		insert(i, root);
 	}
@@ -143,27 +144,24 @@ void KdTree::insert(UINT vid, KdTreeNode* node){
 
 void KdTree::getFaceList(vector<UINT> &vid_vec, vector<UINT> &fid_vec){
 	int id = omp_get_thread_num();
+
 	for (UINT i = 0; i < vid_vec.size(); ++i){
 		for (UINT j = 0; j < (UINT)mesh->m_pVertex[vid_vec[i]].m_nValence; ++j){
 			UINT e = mesh->m_pVertex[vid_vec[i]].m_piEdge[j];
 			UINT f = mesh->m_pEdge[e].m_iFace;
 			
-			UINT v_ind = -1;
-			for (UINT k = 0; k < 3; ++k){
-				if (mesh->m_pFace[f].m_piVertex[k] == vid_vec[i]) {
-					v_ind = k;
-					break;
-				}
-			}
-			face_count[id][f] |= (1 << v_ind);
-			if (face_count[id][f] == 7) {
+			face_count[id][f] ++;
+			if (face_count[id][f] == 3) {
 				fid_vec.push_back(f);
-				face_count[id][f] = 15;
 			}
 		}
 	}
-	for (UINT i = 0; i < fid_vec.size(); ++i) {
-		face_count[id][fid_vec[i]] = 0;
+	for (UINT i = 0; i < vid_vec.size(); ++i){
+		for (UINT j = 0; j < (UINT)mesh->m_pVertex[vid_vec[i]].m_nValence; ++j){
+			UINT e = mesh->m_pVertex[vid_vec[i]].m_piEdge[j];
+			UINT f = mesh->m_pEdge[e].m_iFace;
+			face_count[id][f] = 0;
+		}
 	}
 }
 
@@ -262,35 +260,37 @@ inline void KdTree::searchLine_fast_int(Vector3D o, Vector3D d, double s, double
 		} else {
 			Vector3D point = mesh->m_pVertex[node->vid].m_vPosition;
 			Vector3D distVec = ((point - o) * d) * d - point + o;
-			double dist = distVec.normalize();
-			if (dist < this->radius + DOUBLE_EPS) {
+			double dist = distVec.length2();
+			if (dist < this->radius * this->radius + DOUBLE_EPS) {
 				vid_vec.push_back(node->vid);
 			}
 		}
 	} else {
 		double mint = 1e9;
 		double maxt = -1e9;
-		Vector3D lower = node->lowerBound - radius * Vector3D(1, 1, 1);
-		Vector3D upper = node->upperBound + radius * Vector3D(1, 1, 1);
-		double dt[6];
-		for (int i = 0; i < 6; ++i) {
-			dt[i] = 1e9;
-		}
+		Vector3D lower = node->lowerBound - radius * Vector3D(1, 1, 1) - o;
+		Vector3D upper = node->upperBound + radius * Vector3D(1, 1, 1) - o;
+
+		double dt[6] = {1e9, 1e9, 1e9, 1e9, 1e9, 1e9};
 		if (fabs(d.x) > DOUBLE_EPS) {
-			dt[0] = (lower.x - o.x) / d.x;
-			dt[1] = (upper.x - o.x) / d.x;
+			dt[0] = lower.x / d.x;
+			dt[3] = upper.x / d.x;
 		}
-		if (fabs(d.y) > DOUBLE_EPS) {
-			dt[2] = (lower.y - o.y) / d.y;
-			dt[3] = (upper.y - o.y) / d.y;
+		if (fabs(d.y) > DOUBLE_EPS) {	
+			dt[1] = lower.y / d.y;
+			dt[4] = upper.y / d.y;
 		}
 		if (fabs(d.z) > DOUBLE_EPS) {
-			dt[4] = (lower.z - o.z) / d.z;
-			dt[5] = (upper.z - o.z) / d.z;
+			dt[2] = lower.z / d.z;
+			dt[5] = upper.z / d.z;
 		}
+
 		bool intersect = false;
 		for (int i = 0; i < 6; ++i) {
-			Vector3D tp = o + dt[i] * d;
+			if (dt[i] > mint && dt[i] < maxt) {
+				continue;
+			}
+			Vector3D tp = dt[i] * d;
 			if (upper.x + DOUBLE_EPS > tp.x && 
 				lower.x - DOUBLE_EPS < tp.x && 
 				upper.y + DOUBLE_EPS > tp.y && 
